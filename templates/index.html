@@ -182,10 +182,7 @@
 
         // Init
         document.addEventListener('DOMContentLoaded', async () => {
-            await loadTemplates();
-            setupDropzone();
-
-            // Template selection change event
+            // Template selection change event - DEFINED BEFORE loadTemplates TO CATCH INITIAL EVENT
             const select = document.getElementById('templateSelect');
             select.addEventListener('change', (e) => {
                 const val = e.target.value;
@@ -242,6 +239,9 @@
                     }
                 });
             });
+
+            await loadTemplates();
+            setupDropzone();
         });
 
         async function loadTemplates() {

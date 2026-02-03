@@ -230,13 +230,17 @@ def call_gemini(template_info: dict, text_input: str = None, file_paths: list = 
     
     for path in file_paths:
         mime_type = "application/octet-stream" # Default
-        if path.endswith(".mp3"): mime_type = "audio/mp3"
-        elif path.endswith(".wav"): mime_type = "audio/wav"
-        elif path.endswith(".jobt"): mime_type = "image/jpeg" 
-        elif path.endswith(".jpg") or path.endswith(".jpeg"): mime_type = "image/jpeg"
-        elif path.endswith(".png"): mime_type = "image/png"
-        elif path.endswith(".pdf"): mime_type = "application/pdf"
-        elif path.endswith(".txt"): mime_type = "text/plain"
+        if path.lower().endswith(".mp3"): mime_type = "audio/mp3"
+        elif path.lower().endswith(".wav"): mime_type = "audio/wav"
+        elif path.lower().endswith(".m4a"): mime_type = "audio/mp4"
+        elif path.lower().endswith(".aac"): mime_type = "audio/aac"
+        elif path.lower().endswith(".flac"): mime_type = "audio/flac"
+        elif path.lower().endswith(".ogg"): mime_type = "audio/ogg"
+        elif path.lower().endswith(".jobt"): mime_type = "image/jpeg" 
+        elif path.lower().endswith(".jpg") or path.lower().endswith(".jpeg"): mime_type = "image/jpeg"
+        elif path.lower().endswith(".png"): mime_type = "image/png"
+        elif path.lower().endswith(".pdf"): mime_type = "application/pdf"
+        elif path.lower().endswith(".txt"): mime_type = "text/plain"
 
         # Read file bytes for new SDK upload
         print(f"Reading file: {path}")
