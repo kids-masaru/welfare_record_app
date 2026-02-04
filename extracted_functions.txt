@@ -1,0 +1,103 @@
+def fill_excel(template_path: str, mapping: Dict[str, str], config_mapping: Dict[str, str], output_name: str = None) -> str:
+    """Fill the Excel template with data based on config mapping."""
+    wb = openpyxl.load_workbook(template_path)
+    
+    # Select sheet (Default)
+    default_sheet_name = mapping.pop("_sheet_name", None)
+    if default_sheet_name and default_sheet_name in wb.sheetnames:
+         default_sheet = wb[default_sheet_name]
+    else:
+         default_sheet = wb.active
+    
+    # Invert the config mapping to know which AI key goes to which Cell
+    # config_mapping is { "Label": "Cell" }
+    # AI returns { "Label": "Value" }
+    
+    for label, value in mapping.items():
+        if label in config_mapping:
+            config_value = config_mapping[label]
+            
+            # Determine target sheet and cell
+            target_sheet = default_sheet
+            cell_coord = config_value
+            
+            # Check if config_value has "SheetName!Cell" format
+            if "!" in config_value:
+                parts = config_value.split("!")
+                if len(parts) == 2:
+                    s_name, c_coord = parts
+                    if s_name in wb.sheetnames:
+                        target_sheet = wb[s_name]
+                        cell_coord = c_coord
+            
+            try:
+                # Skip if value is None (preserves template content)
+                if value is None:
+                    continue
+
+                target_sheet[cell_coord] = value
+                
+                # Check for Vertical Text requirement (Status fields starting with '縲・)
+                # If value starts with '縲・ and is short (e.g. "縲・＃謌・), assume vertical alignment needed.
+                if isinstance(value, str) and value.startswith("縲・) and len(value) < 10:
+                    current_align = target_sheet[cell_coord].alignment
+                    new_align = Alignment(
+                        horizontal='center', # Center alignment looks best for vertical
+                        vertical='center',
+                        text_rotation=255,   # 255 = Vertical Text (Stacked)
+                        wrap_text=True,      # Often good to keep on standard vertical cells
+                        shrink_to_fit=current_align.shrink_to_fit,
+                        indent=current_align.indent
+                    )
+                    target_sheet[cell_coord].alignment = new_align
+                
+                # Enable text wrapping for long content cells (e.g. 讀懆ｨ手ｪｲ鬘・ 邨占ｫ・ 谿九＆繧後◆隱ｲ鬘・
+                # This prevents Excel from shrinking text to fit one line
+                elif isinstance(value, str) and len(value) > 50:
+                    current_align = target_sheet[cell_coord].alignment
+                    new_align = Alignment(
+                        horizontal=current_align.horizontal or 'left',
+                        vertical=current_align.vertical or 'top',
+                        wrap_text=True,  # Enable text wrapping
+                        shrink_to_fit=False,  # Disable shrink to fit
+                        indent=current_align.indent
+                    )
+                    target_sheet[cell_coord].alignment = new_align
+            except Exception as e:
+                print(f"Error writing to {cell_coord} ({label}): {e}")
+            
+    if output_name:
+        output_filename = output_name
+    else:
+        output_filename = f"processed_{uuid.uuid4().hex}.xlsx"
+        
+    output_path = os.path.join(OUTPUT_DIR, output_filename)
+    wb.save(output_path)
+    return output_filename
+
+# Helper: Gemini Processing
+def call_gemini(template_info: dict, text_input: str = None, file_paths: list = [], interim_data: str = None) -> Dict[str, str]:
+    """
+    Call Gemini to map input data to Excel structure.
+    interim_data: Optional string containing interim monitoring data for final evaluation mode.
+    """
+    if not client:
+        raise HTTPException(status_code=500, detail="Gemini Client not initialized.")
+
+    # Construct mappings description for the prompt - ONLY field names, NO cell addresses
+    mapping_keys = "\n".join([f"- {key}" for key in template_info['mapping'].keys()])
+
+    # Get context (document purpose/meaning) if available
+    context_instruction = template_info.get('context', "")
+    if context_instruction:
+        context_instruction = f"\n\n--- Document Context ---\n{context_instruction}\n------------------------\n"
+
+    # Get style instruction if available
+    style_instruction = template_info.get('style_instruction', "")
+    if style_instruction:
+        style_instruction = f"\n\n--- Writing Style & Formatting Rules ---\n{style_instruction}\n----------------------------------------\n"
+
+    # Construct the prompt text
+    system_instruction = (
+        "You are an expert welfare record assistant specializing in Japanese disability welfare services (髫懷ｮｳ遖冗･峨し繝ｼ繝薙せ). "
+        "Your task is to understand the provided audio/images/text and extract relevant i

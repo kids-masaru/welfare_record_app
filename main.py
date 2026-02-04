@@ -86,7 +86,132 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 with open("mapping_config.json", "r", encoding="utf-8") as f:
     TEMPLATE_CONFIG = json.load(f)
 
-# ... (read_excel_monitoring_data and fill_excel helpers are unchanged) ...
+# Helper: Read Interim Monitoring Data
+def read_excel_monitoring_data(excel_path: str) -> str:
+    """Read interim monitoring data from an uploaded Excel file."""
+    try:
+        wb = openpyxl.load_workbook(excel_path)
+        
+        # Try to find the interim sheet
+        sheet_name = "モニタリング(中間)"
+        if sheet_name not in wb.sheetnames:
+            # Fallback to first sheet if specific name not found
+            sheet_name = wb.sheetnames[0]
+        
+        ws = wb[sheet_name]
+        
+        # Extract key data based on known cell positions
+        data_lines = []
+        data_lines.append(f"利用者氏名: {ws['C3'].value or ''}")
+        data_lines.append(f"利用者氏名_ふりがな: {ws['C2'].value or ''}")
+        data_lines.append(f"作成者: {ws['J2'].value or ''}")
+        data_lines.append(f"作成年月日: {ws['K3'].value or ''}{ws['L3'].value or ''}{ws['M3'].value or ''}")
+        
+        # Goal 1
+        data_lines.append(f"達成目標: {ws['B6'].value or ''}")
+        status1 = ws['E6'].value or ws['F6'].value or ws['G6'].value or "未定"
+        data_lines.append(f"達成状況: {status1}")
+        data_lines.append(f"未達成原因・分析1: {ws['H6'].value or ''}")
+        data_lines.append(f"今後の対応: {ws['L6'].value or ''}")
+        
+        # Goal 2
+        data_lines.append(f"達成目標: {ws['B11'].value or ''}")
+        status2 = ws['E11'].value or ws['F11'].value or ws['G11'].value or "未定"
+        data_lines.append(f"達成状況: {status2}")
+        data_lines.append(f"未達成原因・分析2: {ws['H11'].value or ''}")
+        data_lines.append(f"今後の対応: {ws['L11'].value or ''}")
+        
+        # Goal 3
+        data_lines.append(f"達成目標: {ws['B16'].value or ''}")
+        status3 = ws['E16'].value or ws['F16'].value or ws['G16'].value or "未定"
+        data_lines.append(f"達成状況: {status3}")
+        data_lines.append(f"未達成原因・分析3: {ws['H16'].value or ''}")
+        data_lines.append(f"今後の対応: {ws['L16'].value or ''}")
+        
+        # Other notes
+        data_lines.append(f"その他の気づき: {ws['A22'].value or ''}")
+        
+        return "\n".join(data_lines)
+    except Exception as e:
+        print(f"Error reading interim Excel: {e}")
+        return ""
+
+# Helper: Fill Excel
+def fill_excel(template_path: str, mapping: Dict[str, str], config_mapping: Dict[str, str], output_name: str = None) -> str:
+    """Fill the Excel template with data based on config mapping."""
+    wb = openpyxl.load_workbook(template_path)
+    
+    # Select sheet (Default)
+    default_sheet_name = mapping.pop("_sheet_name", None)
+    if default_sheet_name and default_sheet_name in wb.sheetnames:
+         default_sheet = wb[default_sheet_name]
+    else:
+         default_sheet = wb.active
+    
+    # Invert the config mapping to know which AI key goes to which Cell
+    # config_mapping is { "Label": "Cell" }
+    # AI returns { "Label": "Value" }
+    
+    for label, value in mapping.items():
+        if label in config_mapping:
+            config_value = config_mapping[label]
+            
+            # Determine target sheet and cell
+            target_sheet = default_sheet
+            cell_coord = config_value
+            
+            # Check if config_value has "SheetName!Cell" format
+            if "!" in config_value:
+                parts = config_value.split("!")
+                if len(parts) == 2:
+                    s_name, c_coord = parts
+                    if s_name in wb.sheetnames:
+                        target_sheet = wb[s_name]
+                        cell_coord = c_coord
+            
+            try:
+                # Skip if value is None (preserves template content)
+                if value is None:
+                    continue
+
+                target_sheet[cell_coord] = value
+                
+                # Check for Vertical Text requirement (Status fields starting with '【')
+                # If value starts with '【' and is short (e.g. "【達成】"), assume vertical alignment needed.
+                if isinstance(value, str) and value.startswith("【") and len(value) < 10:
+                    current_align = target_sheet[cell_coord].alignment
+                    new_align = Alignment(
+                        horizontal='center', # Center alignment looks best for vertical
+                        vertical='center',
+                        text_rotation=255,   # 255 = Vertical Text (Stacked)
+                        wrap_text=True,      # Often good to keep on standard vertical cells
+                        shrink_to_fit=current_align.shrink_to_fit,
+                        indent=current_align.indent
+                    )
+                    target_sheet[cell_coord].alignment = new_align
+                
+                # Enable text wrapping for long content cells
+                elif isinstance(value, str) and len(value) > 50:
+                    current_align = target_sheet[cell_coord].alignment
+                    new_align = Alignment(
+                        horizontal=current_align.horizontal or 'left',
+                        vertical=current_align.vertical or 'top',
+                        wrap_text=True,  # Enable text wrapping
+                        shrink_to_fit=False,  # Disable shrink to fit
+                        indent=current_align.indent
+                    )
+                    target_sheet[cell_coord].alignment = new_align
+            except Exception as e:
+                print(f"Error writing to {cell_coord} ({label}): {e}")
+            
+    if output_name:
+        output_filename = output_name
+    else:
+        output_filename = f"processed_{uuid.uuid4().hex}.xlsx"
+        
+    output_path = os.path.join(OUTPUT_DIR, output_filename)
+    wb.save(output_path)
+    return output_filename
 
 # Helper: Gemini Processing
 def call_gemini(template_info: dict, text_input: str = None, file_paths: list = [], interim_data: str = None) -> Dict[str, str]:
