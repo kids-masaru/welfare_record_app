@@ -8,12 +8,12 @@
     "theme_color": "#68a564",
     "icons": [
         {
-            "src": "/static/fukuchan.jpg",
+            "src": "/static/icon-fukuchan.jpg",
             "sizes": "192x192",
             "type": "image/jpeg"
         },
         {
-            "src": "/static/fukuchan.jpg",
+            "src": "/static/icon-fukuchan.jpg",
             "sizes": "512x512",
             "type": "image/jpeg"
         }

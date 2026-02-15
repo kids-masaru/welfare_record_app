@@ -7,8 +7,8 @@
     <title>福ちゃん - 福祉記録支援アプリ</title>
 
     <!-- Favicon for browser tab -->
-    <link rel="icon" type="image/jpeg" href="/static/fukuchan.jpg">
-    <link rel="apple-touch-icon" href="/static/fukuchan.jpg">
+    <link rel="icon" type="image/jpeg" href="/static/icon-fukuchan.jpg">
+    <link rel="apple-touch-icon" href="/static/icon-fukuchan.jpg">
 
     <!-- PWA meta tags for mobile install -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -56,7 +56,7 @@
         <!-- Header -->
         <header class="bg-gradient-to-r from-green-600 to-teal-600 text-white p-4 text-center shrink-0">
             <div class="flex items-center justify-center gap-3">
-                <img src="/static/fukuchan.jpg" alt="福ちゃん" class="w-10 h-10 rounded-full shadow">
+                <img src="/static/icon-fukuchan.png" alt="福ちゃん" class="w-10 h-10 rounded-full shadow">
                 <div>
                     <h1 class="text-xl font-bold">福ちゃん</h1>
                     <p class="text-xs opacity-80">福祉記録支援アプリ</p>
@@ -125,7 +125,8 @@
                 <!-- Unified Dropzone -->
                 <div id="dropzone"
                     class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition cursor-pointer hover:bg-teal-50 group shrink-0">
-                    <input type="file" id="fileInput" multiple accept="audio/*,image/*,.pdf" class="hidden">
+                    <input type="file" id="fileInput" multiple
+                        accept="audio/*,image/*,video/*,.pdf,.txt,.csv,.xlsx,.docx,.doc" class="hidden">
                     <div class="space-y-1 pointer-events-none">
                         <div class="text-gray-400 group-hover:text-teal-500 transition text-2xl">📂</div>
                         <p class="font-medium text-gray-600 text-sm">ファイルをドロップ</p>

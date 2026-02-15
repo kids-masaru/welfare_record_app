@@ -273,11 +273,18 @@ def call_gemini(template_info: dict, text_input: str = None, file_paths: list = 
         elif path.lower().endswith(".aac"): mime_type = "audio/aac"
         elif path.lower().endswith(".flac"): mime_type = "audio/flac"
         elif path.lower().endswith(".ogg"): mime_type = "audio/ogg"
+        elif path.lower().endswith(".wma"): mime_type = "audio/x-ms-wma"
         elif path.lower().endswith(".jobt"): mime_type = "image/jpeg" 
         elif path.lower().endswith(".jpg") or path.lower().endswith(".jpeg"): mime_type = "image/jpeg"
         elif path.lower().endswith(".png"): mime_type = "image/png"
+        elif path.lower().endswith(".webp"): mime_type = "image/webp"
+        elif path.lower().endswith(".heic") or path.lower().endswith(".heif"): mime_type = "image/heic"
+        elif path.lower().endswith(".mp4"): mime_type = "video/mp4"
+        elif path.lower().endswith(".mov"): mime_type = "video/quicktime"
+        elif path.lower().endswith(".webm"): mime_type = "video/webm"
         elif path.lower().endswith(".pdf"): mime_type = "application/pdf"
         elif path.lower().endswith(".txt"): mime_type = "text/plain"
+        elif path.lower().endswith(".csv"): mime_type = "text/csv"
 
         # Read file bytes for new SDK upload
         print(f"Reading file: {path}")
