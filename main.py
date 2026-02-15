@@ -350,6 +350,7 @@ async def process_data(
     cm_time: str = Form(None),
     cm_attendees: str = Form(None),
     cm_service_manager: str = Form(None),
+    support_period: str = Form(None),
     files: list[UploadFile] = File(None),
     username: str = Depends(get_current_username)
 ):
@@ -376,6 +377,8 @@ async def process_data(
     if cm_location: manual_info_list.append(f"開催場所 (Location): {cm_location}")
     if cm_time: manual_info_list.append(f"開催時間 (Time): {cm_time}")
     if cm_attendees: manual_info_list.append(f"会議出席者 (Attendees): {cm_attendees}")
+    # Kobetsu-specific
+    if support_period: manual_info_list.append(f"支援期間 (Support Period): {support_period}")
     
     manual_info_text = ""
     if manual_info_list:
@@ -438,24 +441,28 @@ async def process_data(
             
         if user_name_furigana and user_name_furigana.strip():
             mapping["利用者氏名_ふりがな"] = user_name_furigana
-            mapping["氏名のふりがな"] = user_name_furigana
+            mapping["氏名のふりがな"] = user_name_furigana # Fallback
 
         if staff_name and staff_name.strip():
             mapping["作成者"] = staff_name
-            
+            mapping["作成担当者"] = staff_name
+
         if date and date.strip():
             # Input date is YYYY-MM-DD (e.g. 2026-05-20)
             try:
-                dt = datetime.datetime.strptime(date, "%Y-%m-%d")
+                # Simple parsing for "作成年月日" etc.
+                mapping["作成年月日"] = date
+                mapping["開催日"] = date
+                mapping["開催日（令和〇年〇月〇日）"] = date
+                mapping["記入日"] = date.replace("-", "/") # Simple format
+                
+                dt = datetime.datetime.strptime(date, '%Y-%m-%d')
                 mapping["作成年_西暦"] = f"{dt.year}年"
                 mapping["作成月"] = f"{dt.month}月"
                 mapping["作成日"] = f"{dt.day}日"
-                # Fallbacks for other templates
-                mapping["作成年月日"] = dt.strftime("%Y年%m月%d日")
-                mapping["日付"] = dt.strftime("%Y年%m月%d日")
-                mapping["実施日"] = dt.strftime("%Y年%m月%d日")
-                # Casemeeting date format
-                mapping["開催日（令和〇年〇月〇日）"] = f"令和{dt.year - 2018}年{dt.month}月{dt.day}日"
+                mapping["月"] = f"{dt.month}"
+                mapping["日"] = f"{dt.day}"
+                mapping["和暦の数字のみ"] = str(dt.year - 2018) # R1=2019
             except ValueError:
                 pass
                 
@@ -475,6 +482,37 @@ async def process_data(
             
         if cm_service_manager and cm_service_manager.strip():
             mapping["サービス管理責任者"] = cm_service_manager
+
+        if location and location.strip():
+            mapping["開催場所"] = location
+
+        if time and time.strip():
+            mapping["開催時間"] = time
+            mapping["時間"] = time
+
+        if count and count.strip():
+            mapping["開催回数"] = count
+            mapping["回数"] = count
+
+        if next_date and next_date.strip():
+            mapping["次回開催時期"] = next_date
+            mapping["次回予定"] = next_date
+
+        if cm_service_manager and cm_service_manager.strip():
+            mapping["サービス管理責任者"] = cm_service_manager
+        
+        if cm_location and cm_location.strip():
+            mapping["開催場所"] = cm_location # CAS meeting location override
+
+        if cm_time and cm_time.strip():
+            mapping["開催時間"] = cm_time # CAS meeting time override
+
+        if cm_attendees and cm_attendees.strip():
+            mapping["会議出席者"] = cm_attendees
+
+        if support_period and support_period.strip():
+            mapping["支援期間"] = support_period
+        
         # --- PRIORITY OVERRIDE END ---
             
     except Exception as e:

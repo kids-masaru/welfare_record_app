@@ -111,6 +111,10 @@
                         <input type="text" id="input_cm_attendees" class="border p-2 rounded"
                             placeholder="会議出席者 (例: 本人、母親、相談支援専門員)">
                     </div>
+                    <div id="kobetsuOnlyFields" class="contents hidden">
+                        <input type="text" id="input_support_period" class="border p-2 rounded"
+                            placeholder="支援期間 (例: R7.4.1~R8.3.31)">
+                    </div>
                 </div>
             </div>
 
@@ -183,7 +187,7 @@
             const select = document.getElementById('templateSelect');
             select.addEventListener('change', (e) => {
                 const val = e.target.value;
-                const showManual = ['record', 'monitoring', 'monitoring_interim', 'monitoring_final', 'assessment', 'casemeeting'].includes(val);
+                const showManual = ['record', 'monitoring', 'monitoring_interim', 'monitoring_final', 'assessment', 'casemeeting', 'kobetsu'].includes(val);
                 const section = document.getElementById('manualInputSection');
                 const monitoringModeSection = document.getElementById('monitoringModeSection');
 
@@ -200,8 +204,11 @@
                     // Fields specific to templates
                     const recordFields = document.getElementById('recordOnlyFields');
                     const casemeetingFields = document.getElementById('casemeetingOnlyFields');
+                    const kobetsuFields = document.getElementById('kobetsuOnlyFields');
+
                     const isRecord = (val === 'record');
                     const isCasemeeting = (val === 'casemeeting');
+                    const isKobetsu = (val === 'kobetsu');
 
                     // Toggle Record fields (location, time, count, next_date)
                     if (isRecord) {
@@ -219,6 +226,15 @@
                     } else {
                         casemeetingFields.classList.add('hidden');
                         casemeetingFields.classList.remove('contents');
+                    }
+
+                    // Toggle Kobetsu fields
+                    if (isKobetsu) {
+                        kobetsuFields.classList.remove('hidden');
+                        kobetsuFields.classList.add('contents');
+                    } else {
+                        kobetsuFields.classList.add('hidden');
+                        kobetsuFields.classList.remove('contents');
                     }
                 } else {
                     section.classList.add('hidden');
@@ -397,6 +413,9 @@
             formData.append('cm_location', document.getElementById('input_cm_location').value);
             formData.append('cm_time', document.getElementById('input_cm_time').value);
             formData.append('cm_attendees', document.getElementById('input_cm_attendees').value);
+
+            // Kobetsu-specific inputs
+            formData.append('support_period', document.getElementById('input_support_period').value);
 
             selectedFiles.forEach(file => {
                 formData.append('files', file);
