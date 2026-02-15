@@ -94,9 +94,11 @@
                 <h2 class="text-sm font-bold text-gray-700 mb-2 border-b pb-1">2. 基本情報 (任意・優先使用)</h2>
                 <div class="grid grid-cols-2 gap-2 text-sm">
                     <input type="text" id="input_user_name" class="border p-2 rounded" placeholder="利用者名">
-                    <input type="text" id="input_user_name_furigana" class="border p-2 rounded" placeholder="ふりがな">
-                    <input type="text" id="input_staff_name" class="border p-2 rounded" placeholder="作成担当者">
-                    <input type="date" id="input_date" class="border p-2 rounded" placeholder="開催日/作成日">
+                    <div id="standardExtraFields" class="contents">
+                        <input type="text" id="input_user_name_furigana" class="border p-2 rounded" placeholder="ふりがな">
+                        <input type="text" id="input_staff_name" class="border p-2 rounded" placeholder="作成担当者">
+                        <input type="date" id="input_date" class="border p-2 rounded" placeholder="開催日/作成日">
+                    </div>
                     <div id="recordOnlyFields" class="contents">
                         <input type="text" id="input_location" class="border p-2 rounded" placeholder="開催場所">
                         <input type="text" id="input_time" class="border p-2 rounded" placeholder="時間 (例: 14:00~)">
@@ -206,9 +208,21 @@
                     const casemeetingFields = document.getElementById('casemeetingOnlyFields');
                     const kobetsuFields = document.getElementById('kobetsuOnlyFields');
 
+                    // New: Fields to hide for Kobetsu (Furigana, Staff, Date)
+                    const standardExtraFields = document.getElementById('standardExtraFields');
+
                     const isRecord = (val === 'record');
                     const isCasemeeting = (val === 'casemeeting');
                     const isKobetsu = (val === 'kobetsu');
+
+                    // Toggle Standard Extra Fields (Hidden ONLY for Kobetsu)
+                    if (isKobetsu) {
+                        standardExtraFields.classList.add('hidden');
+                        standardExtraFields.classList.remove('contents');
+                    } else {
+                        standardExtraFields.classList.remove('hidden');
+                        standardExtraFields.classList.add('contents');
+                    }
 
                     // Toggle Record fields (location, time, count, next_date)
                     if (isRecord) {
