@@ -116,6 +116,8 @@
                     <div id="kobetsuOnlyFields" class="contents hidden">
                         <input type="text" id="input_support_period" class="border p-2 rounded"
                             placeholder="支援期間 (例: R7.4.1~R8.3.31)">
+                        <input type="text" id="input_kobetsu_service_manager" class="border p-2 rounded"
+                            placeholder="サービス管理責任者名 (例: 山崎健太)">
                     </div>
                 </div>
             </div>
@@ -430,6 +432,7 @@
 
             // Kobetsu-specific inputs
             formData.append('support_period', document.getElementById('input_support_period').value);
+            formData.append('kobetsu_service_manager', document.getElementById('input_kobetsu_service_manager').value);
 
             selectedFiles.forEach(file => {
                 formData.append('files', file);

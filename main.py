@@ -351,6 +351,7 @@ async def process_data(
     cm_attendees: str = Form(None),
     cm_service_manager: str = Form(None),
     support_period: str = Form(None),
+    kobetsu_service_manager: str = Form(None),
     files: list[UploadFile] = File(None),
     username: str = Depends(get_current_username)
 ):
@@ -512,6 +513,10 @@ async def process_data(
 
         if support_period and support_period.strip():
             mapping["支援期間"] = support_period
+
+        # Kobetsu: Service Manager with prefix
+        if kobetsu_service_manager and kobetsu_service_manager.strip():
+            mapping["サービス管理責任者名"] = f"サービス管理責任者：{kobetsu_service_manager.strip()}"
         
         # --- PRIORITY OVERRIDE END ---
             
